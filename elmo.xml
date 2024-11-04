@@ -1,0 +1,46 @@
+import eu.mihosoft.vrl.v3d.CSG;
+import eu.mihosoft.vrl.v3d.parametrics.LengthParameter;
+import eu.mihosoft.vrl.v3d.parametrics.Parameter;
+import eu.mihosoft.vrl.v3d.parametrics.Vitamins;
+import eu.mihosoft.vrl.v3d.Primitive;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+
+public class AnimatronicHeadProject {
+
+    public static void main(String[] args) {
+        // Fetch and return the external script dependency
+        ArrayList<CSG> result = (ArrayList<CSG>) ScriptingEngine.gitScriptRun(
+            "https://github.com/madhephaestus/ParametricAnimatronics.git", 
+            "AnimatronicHead.groovy", 
+            args
+        );
+
+        // Additional code for animatronic head model
+        result.addAll(generateAnimatronicHead());
+
+        // Output result, replace or adapt based on your rendering setup
+        BowlerStudioController.setCsg(result);
+    }
+
+    public static ArrayList<CSG> generateAnimatronicHead() {
+        // Default measurements
+        CSG smallServo = Vitamins.get("hobbyServo", "defaultServo");
+        CSG baseHead = new Cylinder(50, 50, 10, 30).toCSG();
+        CSG mechPlate = baseHead.scalex(2 * 60 / 50).intersect(
+            new Cube(70, 50, 20).noCenter().toCSG().movey(-25).movex(-10).union(baseHead).hull()
+        );
+        CSG bottomJaw = mechPlate.difference(
+            new Cylinder(42, 42, 10, 30).toCSG().scalex(2 * 60 / 50),
+            new Cube(70, 50, 20).noCenter().toCSG().toXMax().movey(-25).movex(-10)
+        );
+        BowlerStudioController.setCsg(new ArrayList<>(Arrays.asList(bottomJaw)));
+        mechPlate = mechPlate.movez(20);
+        CSG sideJaw = new Cube(15, 5, 30).toCSG().toZMin()
+            .union(new Cylinder(7.5, 7.5, 5, 30).toCSG().movez(-2.5).rotx(90));
+        CSG eyeComponent = new Cylinder(10, 10, 5, 30).toCSG().movez(70);
+
+        return new ArrayList<>(Arrays.asList(smallServo, baseHead, mechPlate, bottomJaw, sideJaw, eyeComponent));
+    }
+}
